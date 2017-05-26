@@ -1,7 +1,4 @@
-﻿//Version 1.2 - Average Fitness (Explicit Sharing) & Speciation Preserved :)
-//Training --> Start >> 12:00 AM
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -165,6 +162,11 @@ public class FitnessEvaluator {
 		float score = (float)(s); //End of Game Score (+ve)
 		float numberOfClears = (float)(c); //Number of Rows Cleared (+ve)
 		float time = t; //Length of Game Played >>> t/60.0f (+ve)
+		//Debug.Log("numberOfClears " + numberOfClears);
+		//		Debug.Log("Positive Fitness Evaluator Features!");
+		//		Debug.Log("End of Game Score:- " + score);
+		//		Debug.Log("Number of Rows Cleared:- " + numberOfClears);
+		//		Debug.Log("Length of Game Played:- " + time);
 
 		float[] sum_bumpiness = findColumnHeights_calcSumBumpiness(board);
 		float columnHeights_sum = sum_bumpiness[0];//Sum of Column Heights (-ve)
@@ -174,12 +176,23 @@ public class FitnessEvaluator {
 		float upper_playabilityLevel = upper_lower[0]; //Playability ABOVE Column Heights (-ve)
 		float lower_playabilityLevel = upper_lower[1]; //Playability BELOW Column Heights (-ve)
 
-		//Distributes Pieces --> result = (float)(31.7*numberOfClears + 10.9*score + 17.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel); 
-		//Stacks in Middle :( --> result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.118876*upper_playabilityLevel - 0.237753*lower_playabilityLevel); 
-		//Distribute then Stacks :/ --> result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.237753*upper_playabilityLevel - 0.118876*lower_playabilityLevel); 
-		
+		//		Debug.Log("Negative Fitness Evaluator Features!");
+		//		Debug.Log("Summation of Column Heights:- " + columnHeights_sum);
+		//		Debug.Log("Summation of Differences in Column Heights:- " + columnHeights_bumpiness);
+		//		Debug.Log("Upper Playability Level:- " + upper_playabilityLevel);
+		//		Debug.Log("Lower Playability Level:- " + lower_playabilityLevel);
+
 		float result = 0.0f;
-		result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.178315*upper_playabilityLevel - 0.178315*lower_playabilityLevel); 
-		return result;
+		//result = (float)(49.1*numberOfClears + 10.9*score - 23.7*columnHeights - 16.3*bumpiness); //1 Clear Line @15th - 17th Generations
+		//result = (float)(24.7*numberOfClears + 10.9*score + 24.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel); //1 Clear Line @2nd - 4th Generations
+
+		//result = (float)(24.7*numberOfClears + 10.9*score + 24.4*time - 11.7*columnHeights_sum - 7.3*columnHeights_bumpiness - 13.5*upper_playabilityLevel - 7.5*lower_playabilityLevel); //Fitness Value Improved Yet No Clears :/
+
+
+		//result = (float)(31.7*numberOfClears + 10.9*score + 17.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel);
+		result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.237753*upper_playabilityLevel - 0.118876*lower_playabilityLevel);
+		//Debug.Log("Result:- " + result);
+
+		return result; //60:40 >>> +ve:-ve
 	}
 }

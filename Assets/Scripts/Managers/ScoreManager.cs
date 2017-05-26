@@ -40,8 +40,6 @@ public class ScoreManager : MonoBehaviour {
 	// update the user interface
 	void UpdateUIText()
 	{
-		//Debug.Log ("this is my value of score >> ui " + m_score); 
-
 		if (m_linesText)
 		{
 			m_linesText.text = m_lines.ToString();
@@ -61,40 +59,29 @@ public class ScoreManager : MonoBehaviour {
 	// handle scoring
 	public void ScoreLines(int n)
 	{
-		
 		// flag to GameController that we leveled up
 		didLevelUp = false;
 
 		// clamp this between 1 and 4 lines
 		n = Mathf.Clamp(n,m_minLines,m_maxLines);
-		clears_count += n;
-		//Debug.Log ("this is my value of n  " + n); 
+
+		Debug.Log ("i scored");
 		// adds to our score depending on how many lines we clear
-		//Debug.Log ("this is my value of m_level  " + m_level);
-		switch(n)
+		switch (n)
 		{
-			case 1:
-				//Debug.Log("Inside Case 1");
-				//Debug.Log ("this is my value of score  " + m_level);
-				m_score += 40 * m_level;
-				//Debug.Log ("this is my value of score  " + m_score); 
+		case 1:
+			m_score += 40 * m_level;
 				break;
 			case 2:
-				//Debug.Log("Inside Case 2");
 				m_score += 100 * m_level;
 				break;
 			case 3:
-				//Debug.Log("Inside Case 3");
 				m_score += 300 * m_level;
 				break;
 			case 4:
-				//Debug.Log("Inside Case 4");
 				m_score += 1200 * m_level;
 				break;
 		}
-		//m_score = 60;
-		//Debug.Log ("this is my value of score >> after switch  " + m_score); 
-
 
 		// reduce our current number of lines needed for the next level
 		m_lines -= n;
@@ -115,7 +102,6 @@ public class ScoreManager : MonoBehaviour {
 	{
 		m_level = 1;
 		m_lines = m_linesPerLevel * m_level;
-
 		UpdateUIText();
 	}
 
@@ -174,7 +160,5 @@ public class ScoreManager : MonoBehaviour {
 	{
 		this.clears_count = clears;
 	}
-
-
 
 }

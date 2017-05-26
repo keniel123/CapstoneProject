@@ -92,7 +92,6 @@ namespace AssemblyCSharp {
 
 		public AgentNeuralNetwork(Player parent1, Player parent2)
 		{	
-			//Debug.Log ("in parent make baby function    ");
 			fitevaluator = new FitnessEvaluator();
 
 			adjacenyList = new Dictionary<int, List<ConnectionGene>>();
@@ -268,14 +267,12 @@ namespace AssemblyCSharp {
 			changeWeights();
 
 			double prob = generation.NextDouble();
-			//Debug.Log ("i am prob >>>> add node  " + prob);
 			if(prob <= Constants.PROBABILITY_ADD_NODE)
 			{
 				addNode();
 			}
 
 			prob = generation.NextDouble();
-			//Debug.Log ("i am prob add connection >>>>>>" + prob); 
 			if(prob <= Constants.PROBABILITY_ADD_CONNECTION)
 			{
 				addConnection();
@@ -287,11 +284,9 @@ namespace AssemblyCSharp {
 			foreach(ConnectionGene c in this.connectionGenes)
 			{
 				double prob = generation.NextDouble();
-				//Debug.Log ("i am prob mutate weights  >>>>>>" + prob); 
 				if(prob <= Constants.PROBABILITY_MUTATE_WEIGHT)
 				{
 					double change = (generation.Next(-1*Constants.AMOUNT_MUTATE_WEIGHT, Constants.AMOUNT_MUTATE_WEIGHT))/100.0;
-
 					if (c.weight+change < 0)
 					{
 						c.weight = 0;
@@ -310,6 +305,7 @@ namespace AssemblyCSharp {
 
 		private void addConnection()
 		{
+			// TODO: add connections to mutate the network
 			while(true)
 			{
 				int index = generation.Next(0, this.nodeGenes.Count);

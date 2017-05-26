@@ -25,11 +25,7 @@ public class Species {
 				public void RemovebyPlayerName(string p_name)
 				{
 					for (int i = 0; i < members.Count; i++) {
-				//Debug.Log ("members in species >> index >> name >> lookup " + members [i].getPlayerName());
 						if (members [i].getPlayerName () == p_name) {
-					//Debug.Log ("membername >> species  " + members [i].getPlayerName ());
-					//Debug.Log ("membername >> species  " + p_name);
-
 								members.RemoveAt (i);
 						}
 					}
@@ -39,7 +35,7 @@ public class Species {
 				{
 					for (int i = 0; i < members.Count; i++) {
 						if (members [i].getPlayerName () == p_name) {
-					///Debug.Log ("first " + members [i].brain);
+					//Debug.Log ("first " + members [i].brain);
 							return members [i];
 						}
 					}
@@ -51,11 +47,11 @@ public class Species {
 					for (int i = 0; i < members.Count; i++) {
 						if (members [i].getPlayerName () == p_name) {
 							//Debug.Log ("yoooouuuu " + members [i].brain);
-							members [i].addToFitnessAccumulator (p_fitness);
-							
+							members [i].setPlayerFitness (p_fitness);
+
 						}
 					}
-					
+
 				}
 
 				public float GetAverageFitness()
@@ -82,7 +78,7 @@ public class Species {
 					Player minplayer = members[0];
 					foreach (Player player in members)
 					{
-						float fitness = player.getPlayerFitness ();
+				float fitness = player.getPlayerFitness ();
 						if (fitness < minFitness)
 						{
 							minplayer = player;
@@ -100,7 +96,7 @@ public class Species {
 						foreach (Player player in members)
 						{
 					//Debug.Log (player.name);
-							float fitness = player.brain.Evaluate(player.getBoard(),player.get_score(),player.getClears(),player.getTime());
+				float fitness = player.brain.Evaluate(player.getBoard(),player.get_score(),player.getClears(),player.getTime());
 							float adjusted = fitness/(float)members.Count;
 							
 							playerFitnessMap[player.getPlayerName()]= adjusted;//watch out
@@ -116,9 +112,10 @@ public class Species {
 					secondBestPlayer = members[0];
 
 					foreach(Player player in members) {
-						float bestPlayerEval = bestPlayer.getPlayerFitness ();
-						float secondBestPlayerEval = secondBestPlayer.getPlayerFitness ();
-						float PlayerEval = player.getPlayerFitness ();
+				float bestPlayerEval = bestPlayer.getPlayerFitness ();
+				float secondBestPlayerEval = secondBestPlayer.getPlayerFitness ();
+				float PlayerEval = player.getPlayerFitness ();
+
 						if(PlayerEval > bestPlayerEval) {
 							bestPlayer = player;
 						}

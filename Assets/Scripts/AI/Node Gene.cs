@@ -43,25 +43,6 @@ public class NodeGene {
 
 	}
 
-	public override string ToString()
-	{
-		string result;
 
-		// [i] = input node , [o] = output node, [h] = hidden node
-		if (this.type.Equals(NodeType.INPUT))
-		{
-			result = "[I] ID: " + this.nodeId.ToString();
-		}
-		else if (this.type.Equals(NodeType.OUTPUT))
-		{
-			result = "[O] ID: " + this.nodeId.ToString();
-		}
-		else
-		{
-			result = "[H] ID: " + this.nodeId.ToString();
-		}
-
-		return result; 
-	}
 
 }

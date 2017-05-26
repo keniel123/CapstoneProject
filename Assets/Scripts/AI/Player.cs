@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+
 namespace AssemblyCSharp {
 	public class Player :MonoBehaviour {
 
@@ -18,21 +19,19 @@ namespace AssemblyCSharp {
 		//player neural network
 		public AgentNeuralNetwork brain;
 
-		private int alive_interval = 1;
+		private float p_time;
 
 		private string player_name;
 
 		private float p_fitness;
 
-		private float p_time;
-
 		private int numb_clears;
-
-		private float fitness_accumulator;
 
 		private int p_score;
 
 		float[,] board = new float[10,22];
+
+		List<List<Moves>> moveSequence = new List<List<Moves>>();
 
 		float[] inputArray = new float[Constants.INPUTS];
 
@@ -40,7 +39,8 @@ namespace AssemblyCSharp {
 		{
 			MoveLeft,
 			MoveRight,
-			Rotate
+			Rotate,
+			None
 		}
 			
 		void Start () {
@@ -53,6 +53,18 @@ namespace AssemblyCSharp {
 			return this.numb_clears;
 		}
 
+		public void setTime(float time)
+		{
+			this.p_time = time;
+
+		}
+
+		public float getTime()
+		{
+			return this.p_time;
+
+		}
+	
 		public int get_score()
 		{
 			return this.p_score;
@@ -68,18 +80,6 @@ namespace AssemblyCSharp {
 			this.numb_clears = clears;
 
 		}
-
-		public void setTime(float time)
-		{
-			this.p_time = time;
-
-		}
-
-		public float getTime()
-		{
-			return this.p_time;
-
-		}
 	
 		public void updateBrain()
 		{
@@ -88,6 +88,8 @@ namespace AssemblyCSharp {
 			brain.Activate();
 
 		}
+
+
 
 
 		public void setInputArray(float[] boardArr)
@@ -124,11 +126,23 @@ namespace AssemblyCSharp {
 			p_fitness = fitness;
 		}
 
+		public void makeOutputMoves(List<Moves> listp)
+		{
 
-		public Moves getMove()
+			for (int i = 0; i < 4; i++) {
+				
+					moveSequence.Add (listp);
+
+				//moveSequence.Add (Shuffle.MixUp (listp));
+			}
+		}
+
+
+
+		public List<Moves> getMove()
 		{
 			float maxValue = 0f;
-			Moves moves = new Moves();
+			Moves moves = Moves.MoveLeft;
 			for(int i=0; i<brain.OutputSignalArray.Length; i++)
 			{
 
@@ -150,8 +164,19 @@ namespace AssemblyCSharp {
 					}
 				}
 			}
-			//Debug.Log (moves);
-			return moves;
+			if (moves == Moves.MoveRight) {
+				return moveSequence [0];
+
+			} else if (moves == Moves.MoveLeft) {
+				return moveSequence [1];
+			}
+			else if (moves == Moves.Rotate) {
+				return moveSequence [2];
+			}
+			else if (moves == Moves.None) {
+				return moveSequence [3];
+			}
+			return moveSequence[0];
 
 		}
 
@@ -167,35 +192,7 @@ namespace AssemblyCSharp {
 
 		}
 
-		public void addAlive_interval()
-		{
-			this.alive_interval += 1;
 
-		}
-		public int getAlive_interval()
-		{
-			return this.alive_interval;
-
-		}
-		public void setAliveInterval(int i)
-		{
-			this.alive_interval = i;
-
-		}
-		public void addToFitnessAccumulator(float fit)
-		{
-			this.fitness_accumulator += fit;
-
-		}
-		public void setFitnessAccumulator(float fit_acc)
-		{
-			this.fitness_accumulator = fit_acc;
-
-		}
-		public float getFitnessAccumulator()
-		{
-			return this.fitness_accumulator;
-		}
 			
 	}
 

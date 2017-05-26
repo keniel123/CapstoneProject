@@ -4,22 +4,10 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System;
-using System.Threading;
-// FILE IMPORTS
-using System.IO;
-using System.Text;
-using System.Linq;
+
 
 namespace AssemblyCSharp{
 	public class GameController : MonoBehaviour {
-
-		// FILE VARIABLES
-		string path = @"C:/Program Files/Unity/TetrisAgents.txt"; // define path to file
-		string newLine = Environment.NewLine; // define new line character
-		// define best player over all generations
-		float h_all_gens = -1000;
-		Player bestEvolvedPlayer;
-		Player bestGenPlayer;
 
 		public Text generation_count, h_fitness_value, c_fitness_value, species_value, genome_value;
 
@@ -31,9 +19,9 @@ namespace AssemblyCSharp{
 		//player's neural network
 		float h_all_species = -100000,l_all_species,a_all_species = -1000;
 
-		//Stopwatch stopwatch;
-
 		EvolutionStats Evo;
+
+		A_Star search;
 
 		int playersSpawned;
 
@@ -79,7 +67,7 @@ namespace AssemblyCSharp{
 		ScoreManager m_scoreManager;
 
 		//reference to graph manager
-		//GraphController m_graphManager;
+		GraphController m_graphManager;
 
 		// currently active shape
 		Shape m_activeShape;
@@ -89,9 +77,13 @@ namespace AssemblyCSharp{
 
 		Holder m_holder;
 
+		//time to wait before make next move in follow path
+		//public float timeLeft = 30.0f;
+
 		// starting drop interval value
 		public float m_dropInterval = 1.1f;
 
+		public List<Player.Moves> MovesList;
 		// drop interval modified by level
 		float m_dropIntervalModded;
 
@@ -128,19 +120,54 @@ namespace AssemblyCSharp{
 		// toggles the rotation direction icon
 		public IconToggle m_rotIconToggle;
 
+		List<Cell> pathSolution = new List<Cell>();
 		// whether we are rotating clockwise or not when we click the up arrow
 		bool m_clockwise = true;
 
 		// whether we are paused
 		public bool m_isPaused = false;
 
+		//bool that says path is being followed to not call over followingupdate
+		public bool is_followingpath = false;
+
 		// the panel that display when we Pause
 		public GameObject m_pausePanel;
 
+		int move_index = 0;
+
+		DecisionFunction df;
+
+		float[,] decisionarray = new float[10,22];
+
+		float[] tempArray = new float[220];
+
+		Vector2 destinationVector;
+
+		Vector3 currentVector;
+
+		int destinationRotation;
+
+		bool completed_move = true;
+
+		bool finisheddecision = false;
+
 		public ParticlePlayer m_gameOverFx;
 
-		int tempgeneration = 0;
+		private enum AIStates
+		{
+			MakingDecision,
+			Idle,
+			FollowingPath,
+			PathCompleted
 
+		}
+		AIStates currentState;
+
+		Cell curr_loc;
+
+		Cell dest_cell;
+
+		Pathfinder pf; 
 		// Use this for initialization
 		void Start () 
 		{
@@ -154,31 +181,34 @@ namespace AssemblyCSharp{
 			m_spawner = GameObject.FindObjectOfType<Spawner>();
 			m_soundManager = GameObject.FindObjectOfType<SoundManager>();
 			m_scoreManager = GameObject.FindObjectOfType<ScoreManager>();
-			//m_graphManager = GameObject.FindObjectOfType<GraphController>();
+			m_graphManager = GameObject.FindObjectOfType<GraphController>();
 			m_ghost = GameObject.FindObjectOfType<Ghost>();
 			m_holder = GameObject.FindObjectOfType<Holder>();
 			species = new List<Species> ();
-			//stopwatch = new Stopwatch ();
-			timeStarted =true;
+			currentState = AIStates.Idle;
 			//players = new List<GameObject> ();
-
+			player = new Player ();
+			MovesList = new List<Player.Moves> ();
 			Evo = new EvolutionStats ();
 			//inputArray[Constants.INPUTS-1] = 1; // bias node
 			//playersSpawned = 1;
+			timeStarted =true;
+
 			generation = 0;
 			species_value.text = (curr_species + 2).ToString();
 			genome_value.text = (curr_net + 2).ToString() ;
 			generation_count.text = generation.ToString();
-
+			search = new A_Star ();
 
 			//AssignPlayerToSpecies (player);
 			CreateInitialPopulation();
+			//InvokeRepeating("FollowingPathUpdate",0f,.10f);
+			//CreateInitialPopulation();
 			player = new Player ();
 			var net = next_net ();
 			player = (Player)net;
 
-
-			//Debug.LogWarning (player.getPlayerName ());
+			df = new DecisionFunction ();
 
 			m_timeToNextKeyDown = Time.time + m_keyRepeatRateDown;
 			m_timeToNextKeyLeftRight = Time.time + m_keyRepeatRateLeftRight;
@@ -198,7 +228,10 @@ namespace AssemblyCSharp{
 			{
 				Debug.LogWarning("WARNING!  There is no score manager defined!");
 			}
-
+			if (!m_graphManager)
+			{
+				Debug.LogWarning("WARNING!  There is no graph manager defined!");
+			}
 
 			if (!m_spawner)
 			{
@@ -224,48 +257,75 @@ namespace AssemblyCSharp{
 				m_pausePanel.SetActive(false);
 			}
 
+
+
 			//player.setInputArray (InputBoardStates (inputArray));
 
+			this.decisionarray = Make2DArray (InputBoardStates (this.tempArray), 22, 10);
 			m_dropIntervalModded = Mathf.Clamp(m_dropInterval - ((float)m_scoreManager.m_level * 0.1f), 0.05f, 1f);
 			//CreatePlayer ();
-			//Debug.Log ("y " + m_gameBoard.m_grid.GetLength(1));
-			//Debug.Log ("x " + m_gameBoard.m_grid.GetLength(0));
+			currentState = AIStates.MakingDecision;
 
 		}
 
 		// Update is called once per frame
 		void Update () 
 		{
-			
 			// if we are missing a spawner or game board or active shape, then we don't do anything
-			if (!m_spawner || !m_gameBoard || !m_activeShape || m_gameOver || !m_soundManager || !m_scoreManager )
+			if (!m_spawner || !m_gameBoard || !m_activeShape || m_gameOver || !m_soundManager || !m_scoreManager || !m_graphManager)
 			{
 				return;
 			}
 
+		
 
-			if (Time.time > m_timeToDrop) {
-				m_timeToDrop = Time.time + m_dropInterval;
-				m_timeToNextKeyDown = Time.time + m_keyRepeatRateDown;
 				if (m_activeShape) {
 
-					m_activeShape.MoveDown ();
-					if (!m_gameBoard.IsValidPosition (m_activeShape)) 
-					{
-						if (m_gameBoard.IsOverLimit(m_activeShape))
-						{
+					//m_activeShape.MoveDown ();
+					if (!m_gameBoard.IsValidPosition (m_activeShape)) {
+						if (m_gameBoard.IsOverLimit (m_activeShape)) {
 							m_gameOver = true;
-						}
-						else
-						{
-							//Debug.Log ("land");
+						} else {
 							LandShape ();
 						}
 					}
-				}
+
+
 
 
 			}
+
+
+			//Debug.Log (currentState);
+			switch (currentState) {
+				case AIStates.MakingDecision:
+					if (finisheddecision == true) {
+						currentState = AIStates.Idle;
+					}
+					break;
+			case AIStates.Idle:
+					IdleUpdate ();
+					break;
+				case AIStates.FollowingPath:
+				if (completed_move == true) {
+					player.setInputArray (InputBoardStates (inputArray));
+					player.updateBrain ();
+					completed_move = false;
+					StartCoroutine ("followingpath");
+						//FollowingPathUpdate ();
+
+					}
+					
+					break;
+				case AIStates.PathCompleted:
+					
+					currentState = AIStates.MakingDecision;
+					move_index = 0;
+					//this.MovesList.Clear ();
+					//Debug.Log ("Moveslist >>>>> idle " + this.MovesList.Count);
+					break;
+			}
+				
 			if (timeStarted == true) {
 				timer += Time.deltaTime;
 			}
@@ -275,57 +335,117 @@ namespace AssemblyCSharp{
 
 
 			if(m_gameOver){
+				
 				timeStarted = false;
 				player.setBoard (Make2DArray (player.getInputArray(), 22, 10));
-				player.addAlive_interval ();
 				player.setClears (m_scoreManager.getClears());
 				player.setScore (m_scoreManager.getscore());
 				float seconds = timer % 60;
 				player.setTime (seconds);
-				//Debug.Log (timer);
 				timer = 0f;
 
 				var next_network = next_net ();
 
 				if (next_network == null) {
-					this.tempgeneration++;
+					Debug.Log ("next gen");
 					m_gameOver = false;
-
-					if (tempgeneration!=0 && tempgeneration % 3 == 0) {
-						NewGeneration ();
-					}
-					nextplayerReset ();
+					NewGeneration ();
+					findHALValues ();
+					h_fitness_value.text = h_all_species.ToString();
 					//m_graphManager.UpdateGraph ();
 				} else {
+					Debug.Log ("reset");
 					Reset ();
 					timeStarted = true;
 					m_gameOver = false;
 					player = (Player) next_network;
-					//Debug.LogWarning (player.getPlayerName ());
 
 				}
 
 			}
 
-			// Check for end of set training time
-			if (generation > Constants.GENERATIONS){
-				// Save best NN at the end of training
-				saveBestBrain(bestEvolvedPlayer, h_all_gens);
-				// End game
-				GameOver();
+
+			//player.setInputArray (InputBoardStates (inputArray));
+//			PlayerInput (player.getMove());
+			//player.updateBrain ();
+			if (generation > 0) {
+				c_fitness_value.text = player.getPlayerFitness ().ToString ();
 			}
-			else{
-				player.setInputArray (InputBoardStates (inputArray));
-				PlayerInput (player.getMove());
-				player.updateBrain ();
-				if (tempgeneration!=0 && tempgeneration % 3 == 0) {
-					c_fitness_value.text = player.getPlayerFitness ().ToString ();
-					h_fitness_value.text = h_all_species.ToString();
-				}
-			}
+
+
 
 		}
 
+		IEnumerator followingpath(){
+			
+			while (move_index < this.MovesList.Count) {
+				ExecuteMoves(this.MovesList[move_index]);
+				//Debug.Log (this.MovesList [move_index]);
+				move_index++;
+				yield return new WaitForSeconds(.1f);
+			}
+			PlayerInput (Player.Moves.None);
+			//Debug.Log ("I have reached my target");
+
+			yield return new WaitForSeconds (1f);
+
+			//Debug.Log ("Couroutine Done");
+
+
+
+			completed_move = true;
+		}
+
+
+		void FollowingPathUpdate()
+		{
+			
+			if (move_index < this.MovesList.Count) {
+				//Debug.Log (this.MovesList [move_index]);
+				ExecuteMoves (this.MovesList [move_index]);
+			}
+
+			//ExecuteMoves (player.getMove ());
+
+			//currentState = AIStates.PathCompleted;
+			
+		}
+
+		void IdleUpdate()
+		{
+			runSearch (this.curr_loc,this.dest_cell,this.destinationRotation);
+			//Debug.Log ("in you ");
+		}
+
+		void ExecuteMoves(Player.Moves move)
+		{
+			//
+			PlayerInput (move);
+
+		}
+
+			//is_followingpath = true;
+
+		IEnumerator makingDecision()
+		{
+			
+			ArrayList result = df.ExecuteDecision (m_activeShape, m_gameBoard, this.decisionarray);
+			//Debug.Log ("ggggggggggg   " + result);
+			this.destinationVector = (Vector2) result [0];
+			//Debug.Log ("ggggggggggg   " + destinationVector);
+			this.destinationRotation = (int) result [1];
+			//Debug.Log ("ggggggggggg   " + destinationRotation);
+			this.currentVector = (Vector3) result [2];
+			//Debug.Log ("ggggggggggg   " + currentVector);
+			this.curr_loc = new Cell ((int)currentVector.x, (int)currentVector.y, m_gameBoard);
+			this.dest_cell = new Cell ((int)destinationVector.x, (int)destinationVector.y, m_gameBoard);
+
+			yield return new WaitForSeconds (.1f);
+
+			finisheddecision = true;
+
+
+		}
 
 
 		void LateUpdate()
@@ -334,6 +454,7 @@ namespace AssemblyCSharp{
 			{
 				m_ghost.DrawGhost(m_activeShape,m_gameBoard);
 			}
+			StartCoroutine("makingDecision");
 
 		}
 
@@ -349,6 +470,39 @@ namespace AssemblyCSharp{
 			}
 			return output;
 		}
+		void PlayerInput(Player.Moves m)
+		{
+			
+			if (Player.Moves.MoveLeft == m) {
+				//Debug.Log ("make left");
+				MoveLeft ();
+				//completed_move = false;
+				//move_index++;
+				//completed_move = true;
+
+			} else if (Player.Moves.MoveRight == m) {
+				//Debug.Log ("make right");
+				MoveRight ();
+				//completed_move = false;
+				//move_index++;
+				//completed_move = true;
+
+			} else if (m == Player.Moves.Rotate) {
+				//Debug.Log ("make rotate");
+				Rotate ();
+				//completed_move = false;
+				//move_index++;
+				//completed_move = true;
+
+			} else if (m == Player.Moves.None) {
+				//Debug.Log ("make down");
+				MoveDown ();
+				//completed_move = false;
+				//move_index++;
+				//completed_move = true;
+			}
+		}
+
 
 
 		void MoveRight()
@@ -367,12 +521,14 @@ namespace AssemblyCSharp{
 
 			}
 
+
 		}
 
 
 
 		void MoveLeft()
 		{
+			//Debug.Log ("make left");
 			m_activeShape.MoveLeft ();
 			//m_timeToNextKeyLeftRight = Time.time + m_keyRepeatRateLeftRight;
 
@@ -387,7 +543,27 @@ namespace AssemblyCSharp{
 
 			}
 
+
 		}
+
+		void MoveDown()
+		{
+			m_activeShape.MoveDown ();
+			//m_timeToNextKeyLeftRight = Time.time + m_keyRepeatRateLeftRight;
+
+			if (!m_gameBoard.IsValidPosition (m_activeShape)) 
+			{
+				PlaySound (m_soundManager.m_errorSound,0.5f);
+			}
+			else
+			{
+				PlaySound (m_soundManager.m_moveSound,0.5f);
+			}
+
+		}
+
+
+
 
 		void Rotate()
 		{
@@ -408,20 +584,7 @@ namespace AssemblyCSharp{
 				PlaySound (m_soundManager.m_moveSound,0.5f);
 
 			}
-		}
 
-		void PlayerInput(Player.Moves m)
-		{
-			if (Player.Moves.MoveLeft == m) {
-				MoveLeft ();
-
-			} else if (Player.Moves.MoveRight == m) {
-				MoveRight ();
-
-			} else if (m == Player.Moves.Rotate) {
-				Rotate ();
-
-			} 
 		}
 
 
@@ -438,126 +601,37 @@ namespace AssemblyCSharp{
 
 		void findHALValues()
 		{
-			// Initialize
-			int species_count = 0;
 			float sum = 0;
-			int bestSpecies = 0;
-
 			foreach (Species s in species) {
 				foreach (Player p in s.members) {
 					sum += p.getPlayerFitness();
 					if (p.getPlayerFitness () > h_all_species) {
 						h_all_species = p.getPlayerFitness ();
 
-						// Store best species for this gen
-						bestSpecies = species_count;
-						// Store best player for this gen
-						bestGenPlayer = (Player) p;
-						
-						// Calculate best player over all gens
-						if (h_all_species > h_all_gens)
-						{
-							// Update highest fitness
-							h_all_gens = h_all_species;
-							// Store corresponding player
-							bestEvolvedPlayer = (Player) p;
-						}
-
 					}
 					if (p.getPlayerFitness () < l_all_species) {
 						l_all_species = p.getPlayerFitness ();
 					}
 				}
-				
-				// Track number of species
-				species_count++;
+
 			}
 			a_all_species = sum / Constants.POPULATION;
 			Evo.addTopValue (h_all_species);
 			Evo.addAvgValue (a_all_species);
 			Evo.addLowValue (l_all_species);
-			//Debug.Log ("high " + h_all_species.ToString());
-			//Debug.Log ("low " + l_all_species.ToString());
-
-			// Write to file the best player for this gen
-			saveBestPlayer(generation,bestSpecies,h_all_species,bestGenPlayer.get_score(),bestGenPlayer.getPlayerName());
+			Debug.Log ("high " + h_all_species.ToString());
+			Debug.Log ("low " + l_all_species.ToString());
 
 		}
-
-		// FUNCTION DEFINITIONS - Saving agent game sessions
-		void saveBestPlayer(int gen,int numSpecies,float bestFitness,int score,string playerName)
-		{
-			// Add header text only once to the file
-			if (!File.Exists(path))
-			{
-				// Header data
-				string header = "Tetris Agents Data" + newLine;
-				// Create file to write to
-				File.WriteAllText(path, header);
-			}
-
-			// Generation data
-			string genInfo = "Generation: " + gen.ToString();
-
-			// Best player info
-			string fitness = "Highest Fitness: " + bestFitness.ToString();
-			string gameScore = "End game score: " + score.ToString();
-			string bestPlayer = "Best Player: " + playerName;
-			string species = "Species: " + numSpecies.ToString();
-
-			// Synthesize 
-			string data = newLine + genInfo + newLine + fitness + newLine + bestPlayer + newLine + gameScore + newLine + species + newLine;
-			
-			// Append data to file
-			File.AppendAllText(path, data);
-
-		}
-
-		// Save NN structure of best evolved player
-		void saveBestBrain(Player player, float bestOverallFitness)
-		{
-			string bestp = player.getPlayerName();
-			// Neural Net (only need the neural net of the best evolved player)
-			string nn = "Best Evolved Player's Brain => " + bestp + " with fitness = " + bestOverallFitness.ToString() + " and game score = " + player.get_score().ToString() + " making line clears = " + player.getClears().ToString();
-			// Get Node Genes
-			List<NodeGene> nodeGenes = player.brain.GetNodes();
-			// Get Connection Genes
-			List<ConnectionGene> connectionGenes = player.brain.GetConnections();
-			// Node Genes => ID, Type
-			//string nodes = "<< Node Genes >> => " + string.Join(", ", nodeGenes.Select(n=>n.ToString()).ToArray<string>());
-			// Iterate through list of node genes
-			string nodes = "<< Node Genes >> => ";
-			foreach (NodeGene n in nodeGenes)
-			{
-				// Check node type
-				if (n.type.Equals(NodeType.HIDDEN))
-				{
-					nodes += n.ToString() + " )( "; 
-				}
-			}
-			// Connection Genes => InnovationNum, NodeIn, NodeOut, Weight, Enabled
-			string connections = "<< Connection Genes >> => " + string.Join(" || ", connectionGenes.Select(c=>c.ToString()).ToArray<string>());
-			// Genome
-			string genome = "Genome" + newLine + nodes + newLine + connections;
-
-			// Synthesize 
-			string data = newLine + nn + newLine + genome + newLine;
-			
-			// Append data to file
-			File.AppendAllText(path, data);
-		}
-
 		void ReplaceWorstPlayer()
 		{
-			if(tempgeneration!=0 && tempgeneration % 3 == 0)
+			if(this.generation > 0)
 			{
-				
+				//Debug.Log ("yaaaassss queen");
 				Player worstPlayer = RemoveWorstPlayer();
 				//Evo.addLowValue (worstPlayer.brain.Evaluate (worstPlayer.getBoard (), worstPlayer.get_score (), worstPlayer.getClears ()));
-				//Debug.Log ("worst player >> from remove player  " + worstPlayer.getPlayerName());
 				if (worstPlayer.getPlayerName() == null) 
 				{
-					//Debug.Log ("worst player null >>>>>");
 					return;
 				}
 
@@ -571,14 +645,12 @@ namespace AssemblyCSharp{
 				parentSpecies.ChooseParents (out bestPlayer, out secondbestPlayer);
 
 				//best player for specie Evo.addTopValue(bestPlayer.brain.Evaluate (bestPlayer.getBoard (), bestPlayer.get_score (), bestPlayer.getClears ()));
-				//Debug.Log ("best player >>   " + bestPlayer.getPlayerName());
-				//Debug.Log ("second best player >>   " + secondbestPlayer.getPlayerName());
+
 				//Create a new brain from the 2 best parents
-				AgentNeuralNetwork fitterbrain = new AgentNeuralNetwork(bestPlayer,secondbestPlayer);
-				//Debug.Log ("worst player >> child  " + worstPlayer.getPlayerName());
+				AgentNeuralNetwork fitterbrain = new AgentNeuralNetwork(bestPlayer, secondbestPlayer);
+				//Debug.Log ("fitter brain  " + fitterbrain);
 				worstPlayer.brain = fitterbrain;
-				worstPlayer.setAliveInterval (1);
-				//Debug.Log ("worst player >> child alive int  " + worstPlayer.getAlive_interval());
+
 				AssignPlayerToSpecies (worstPlayer);
 
 			}
@@ -588,11 +660,11 @@ namespace AssemblyCSharp{
 
 		void Reset()
 		{
+			
 			m_scoreManager.setScore (0);
 			m_scoreManager.setLevel (1);
-			m_scoreManager.setClears (0);
+			m_gameBoard.setClears (0);
 			m_scoreManager.Reset ();
-
 			deleteShapes ();
 
 		}
@@ -642,6 +714,7 @@ namespace AssemblyCSharp{
 			}
 		}
 
+
 		public void AssignPlayerToSpecies(Player player)
 		{
 
@@ -679,12 +752,12 @@ namespace AssemblyCSharp{
 
 		public void CreateInitialPopulation()
 		{
-			for (int x = 0; x < Constants.SPECIES_COUNT; x++) {
+			for (int x = 0; x <= Constants.SPECIES_COUNT; x++) {
 				Species newSpecies = new Species ();
 				species.Add (newSpecies);
 
 			}
-			for(int i = 0; i< Constants.POPULATION; i++)
+			for(int i = 0; i<= Constants.POPULATION; i++)
 			{
 				player = new Player ();
 				player.brain = new AgentNeuralNetwork (Constants.INPUTS, Constants.OUTPUTS);
@@ -700,25 +773,21 @@ namespace AssemblyCSharp{
 
 		public void NewGeneration()
 		{
-			
 			Debug.Log ("new generation");
 			//Debug.Log ("h fit" + h_fitness.ToString());
 			//Evo.addTopValue (h_fitness);
 			//Evo.addLowValue (low_fitness);
 			this.generation++;
+			Reset ();
 			ReplaceWorstPlayer ();
-			if (tempgeneration!=0 && tempgeneration % 15 == 0) {
+			if (generation > 0 && generation % 15 == 0) {
 				PruneStaleSpecies ();
 			}
-		}
-
-		public void nextplayerReset()
-		{
-			Reset ();
-
 			var net = next_net ();
 			player = (Player)net;
 			timeStarted = true;
+
+
 
 		}
 
@@ -730,7 +799,7 @@ namespace AssemblyCSharp{
 			Species minPlayerSpecies = null;
 
 			//find player with the lowest adjusted fitness
-			 foreach(Species s in species)
+			foreach(Species s in species)
 			{
 				Dictionary<string, float> adjustedFitnessMapping = s.CalculateAdjustedFitness ();
 
@@ -740,22 +809,10 @@ namespace AssemblyCSharp{
 
 					//Debug.Log ("the fitness value for " + m + " is " + adjustedFitnessMapping [m]);
 					s.addFitness(m,adjustedFitnessMapping[m]);
-					if(HasBeenAliveLongEnough(s.FindbyPlayerName(m)))
-						{
-							//Debug.Log ("aliiiive long enough >>>>>>>> ");
-							//Debug.Log (m);
-							
-							s.FindbyPlayerName (m).setPlayerFitness (s.FindbyPlayerName (m).getFitnessAccumulator() / 3);
-							
-							//Debug.Log (s.FindbyPlayerName (m).getPlayerFitness ());
-							s.FindbyPlayerName (m).setFitnessAccumulator (0);
-							
-
-						}
-					if(s.FindbyPlayerName(m).getPlayerFitness() < minFitness)
+					if(adjustedFitnessMapping[m] < minFitness)
 					{
 
-						minFitness = s.FindbyPlayerName(m).getPlayerFitness();
+						minFitness = adjustedFitnessMapping [m];
 						minPlayer = m;
 						minPlayerSpecies = s;
 
@@ -770,33 +827,22 @@ namespace AssemblyCSharp{
 			//Debug.Log ("name " + minPlayer);
 			//Debug.Log ("count before " + minPlayerSpecies.members.Count);
 			Player m_player = new Player();
-			low_fitness = minFitness;
-			if (minPlayer != null) {
-				if (HasBeenAliveLongEnough (m_player = minPlayerSpecies.FindbyPlayerName (minPlayer))) {
-					//Debug.Log ("been alived activated >>>>>> " + minPlayer);
-				
-					m_player = minPlayerSpecies.FindbyPlayerName (minPlayer);
-					findHALValues ();
-					//Debug.Log ("been alive player >>>>>  " + m_player); 
+			//low_fitness = minFitness;
+			if (minPlayer != null) 
+			{
+				m_player = minPlayerSpecies.FindbyPlayerName (minPlayer);
 
-					//Debug.Log ("been alive player interval >>>>>  " + m_player.getAlive_interval ()); 
-					//remove player from its specie
-					minPlayerSpecies.RemovebyPlayerName (minPlayer);
-
-					if (minPlayerSpecies.members.Count == 0) {
-						species.Remove (minPlayerSpecies);
-					}
-					//Debug.Log ("count after " + minPlayerSpecies.members.Count);
-
-			
-					//Debug.Log ("m_player " + m_player.getPlayerName ());
-
-					return m_player;
+				//remove player from its specie
+				minPlayerSpecies.RemovebyPlayerName(minPlayer);
+			}
+			//Debug.Log ("count after " + minPlayerSpecies.members.Count);
+			for (int i = 0; i < species.Count; i++) {
+				if (species [i].members.Count == 0) {
+					species.RemoveAt (i);
 				}
 			}
-			Player timone = new Player();
-			//Debug.Log(" not alive enough   " + timone.getPlayerName());
-			return timone;
+
+			return m_player;
 		}
 
 
@@ -830,18 +876,6 @@ namespace AssemblyCSharp{
 		}
 
 
-
-		bool HasBeenAliveLongEnough(Player p)
-		{
-			if (p.getAlive_interval() >= 3) {
-				return true;
-			} else {
-				return false;
-			}
-
-
-		}
-
 		void PruneStaleSpecies()
 		{
 			List<string> availableNames = new List<string> ();
@@ -854,7 +888,7 @@ namespace AssemblyCSharp{
 			avg = sum / species.Count;
 			for (int i = 0; i < species.Count; i++) {
 				if (species [i].GetAverageFitness () < avg) {
-					species.Remove (species [i]);
+					species.RemoveAt (i);
 				}
 			}
 			foreach (Species sp in species) {
@@ -870,7 +904,7 @@ namespace AssemblyCSharp{
 					player = new Player ();
 					player.brain = new AgentNeuralNetwork (Constants.INPUTS, Constants.OUTPUTS);
 					player.setPlayerName ("Player" + UnityEngine.Random.Range(0,50));
-					player.setPlayerFitness(-9999);
+					player.setPlayerFitness (-9999);
 					if (availableNames.Contains (player.getPlayerName ())) {
 						while (!availableNames.Contains (player.getPlayerName ())) {
 							player.setPlayerName ("Player" + UnityEngine.Random.Range (0, 50));
@@ -882,6 +916,12 @@ namespace AssemblyCSharp{
 		}
 
 
+		bool HasBeenAliveLongEnough(Player p)
+		{
+			return true;
+
+
+		}
 
 
 
@@ -913,13 +953,17 @@ namespace AssemblyCSharp{
 		}
 
 
-
 		// shape lands
 		void LandShape ()
 		{
-			// move the shape up, store it in the Board's grid array
+			is_followingpath = true;
 			m_activeShape.MoveUp ();
+			//Debug.Log ("IN LANDY");
+
+			// move the shape up, store it in the Board's grid array
+
 			m_gameBoard.StoreShapeInGrid (m_activeShape);
+			this.decisionarray = Make2DArray (InputBoardStates (this.tempArray), 22, 10);
 
 			m_activeShape.LandShapeFX();
 
@@ -935,7 +979,12 @@ namespace AssemblyCSharp{
 			// spawn a new shape
 			m_activeShape = m_spawner.SpawnShape ();
 
+			currentState = AIStates.PathCompleted;
 
+			// set all of the timeToNextKey variables to current time, so no input delay for the next spawned shape
+			m_timeToNextKeyLeftRight = Time.time;
+			m_timeToNextKeyDown = Time.time;
+			m_timeToNextKeyRotate = Time.time;
 
 			// remove completed rows from the board if we have any 
 			//m_gameBoard.ClearAllRows();
@@ -943,16 +992,10 @@ namespace AssemblyCSharp{
 			m_gameBoard.StartCoroutine("ClearAllRows");
 
 
-
 			PlaySound (m_soundManager.m_dropSound);
-		
-		
-			//m_gameBoard.m_completedRows = 1;
-			//Debug.Log ("Before >> completed rows =  " + m_gameBoard.m_completedRows);
 
 			if (m_gameBoard.m_completedRows > 0)
 			{
-				//Debug.Log ("After >> completed rows =  " + m_gameBoard.m_completedRows);
 				m_scoreManager.ScoreLines(m_gameBoard.m_completedRows);
 
 				if (m_scoreManager.didLevelUp)
@@ -975,7 +1018,82 @@ namespace AssemblyCSharp{
 			}
 
 
+
 		}
+
+		void runSearch(Cell start,Cell end, int rotation)
+		{
+			List<Player.Moves> temp_arr = new List<Player.Moves>();
+
+			StartCoroutine(search.PerformSearch(start,end,rotation,m_gameBoard,delegate(List<Cell> _path) {
+				pathSolution = _path;
+
+			},m_activeShape));
+		
+
+			 if (pathSolution.Count != 0) {
+				//Cell star = new Cell (1, 6, m_gameBoard);
+				for (int i = 0; i < pathSolution.Count; i++) {
+					if (i == 0) {
+						temp_arr.Add (GetMovement2Cell (pathSolution [i], start));
+					} else {
+						temp_arr.Add(GetMovement2Cell(pathSolution [i], pathSolution [i - 1]));
+					}
+					//Debug.Log (pathSolution [i]);
+					////GetMovement2Cell (pathSolution [i], star);
+					//star = pathSolution [i];
+				}
+//				Debug.Log ("end >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  ");
+//				Debug.Log ("start  >>>>>>" + start);
+//				Debug.Log ("end >>>>>>>>>  " + end);
+				//Debug.Log ("rotation >>>> " + rotation);
+//				for (int i = 0; i < pathSolution.Count; i++) {
+//					Debug.Log ("solution  >>>>>> " + pathSolution[i]);
+//				}
+//				Debug.Log ("end >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+//
+				//player.makeOutputMoves (MovesList);
+				//this.MovesList = player.getMove ();
+				this.MovesList = temp_arr;
+
+				if (rotation == 1) {
+					Rotate ();
+				} else if (rotation == 2) {
+					Rotate ();
+					Rotate ();
+				}
+				else if (rotation == 3) {
+					Rotate ();
+					Rotate ();
+					Rotate ();
+				}
+				currentState = AIStates.FollowingPath;
+				//Debug.Log (MovesList.Count);
+			}
+
+
+
+
+		}
+
+		Player.Moves GetMovement2Cell(Cell _to, Cell _from)
+		{
+			//Debug.Log ("From   >>> " + _from);
+			//Debug.Log ("To  >>>>" + _to);
+			Player.Moves move = Player.Moves.None;
+			if (_to.x == (_from.x + 1) && _to.y == _from.y) {
+				move = Player.Moves.MoveRight;
+			}
+			if (_to.x == (_from.x - 1) && _to.y == _from.y) {
+				move = Player.Moves.MoveLeft;
+			}
+			return move;
+
+
+
+		}
+
+
 
 		// triggered when we are over the board's limit
 		void GameOver ()

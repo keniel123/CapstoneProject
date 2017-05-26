@@ -19,6 +19,8 @@ public class Board : MonoBehaviour {
 	// store inactive shapes here
 	public Transform[,] m_grid;
 
+
+
 	public int m_completedRows = 0;
 
 	public ParticlePlayer[]  m_rowGlowFx = new ParticlePlayer[4];
@@ -52,6 +54,7 @@ public class Board : MonoBehaviour {
 
 	public bool IsValidPosition(Shape shape)
 	{
+		//Debug.Log (shape.tag);
 		foreach (Transform child in shape.transform)
 		{
 			Vector2 pos = Vectorf.Round(child.position);
@@ -67,6 +70,300 @@ public class Board : MonoBehaviour {
 			}
 		}
 		return true;
+	}
+
+	public bool IsValidPosition(Shape active, Cell to, int rotation)
+	{
+		Vector2 midposition = new Vector2(to.x,to.y); 
+		if (active.gameObject.tag == "piece-I") {
+			if (rotation == 0 || rotation == 2) {//original state 
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x, (int) midposition.y + 1) || IsOccupied ((int)midposition.x, (int)midposition.y + 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 2) || IsOccupied ((int)midposition.x, (int)midposition.y + 2, active)) {
+					return false;
+				}
+			} else  {//any other rotation 
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x -1 , (int)midposition.y , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 2, (int) midposition.y) || IsOccupied ((int)midposition.x + 2, (int)midposition.y , active)) {
+					return false;
+				}
+
+			}
+			return true;
+		}
+		else if (active.gameObject.tag == "piece-Z") {
+			if (rotation == 0 || rotation == 2) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x + 1 , (int) midposition.y ) || IsOccupied ((int)midposition.x + 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x, (int) midposition.y + 1) || IsOccupied ((int)midposition.x, (int)midposition.y + 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y + 1, active)) {
+					return false;
+				}
+			} else {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x + 1, (int)midposition.y + 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x  + 1 , (int)midposition.y , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1, active)) {
+					return false;
+				}
+
+			}
+			return true;
+		}
+		else if (active.gameObject.tag == "piece-T") {
+			if (rotation == 0) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1, (int)midposition.y , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y ) || IsOccupied ((int)midposition.x - 1, (int)midposition.y , active)) {
+					return false;
+				}
+			} else if (rotation == 1) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x  , (int)midposition.y + 1 ,active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1,active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 2) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1 , (int) midposition.y ) || IsOccupied ((int)midposition.x + 1 , (int)midposition.y ,active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x , (int)midposition.y + 1,active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 3) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x  , (int)midposition.y + 1 ,active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1,active)) {
+					return false;
+				}
+
+			}
+			return true;
+		}
+		else if (active.gameObject.tag == "piece-S") {
+			if (rotation == 0) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y - 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y - 1 , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y ) || IsOccupied ((int)midposition.x + 1, (int)midposition.y , active)) {
+					return false;
+				}
+			} else if (rotation == 1 || rotation == 3) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x -1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1 , (int) midposition.y + 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y + 1 , active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 2) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x -1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1 , (int) midposition.y + 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y + 1 , active)) {
+					return false;
+				}
+
+			}
+
+			return true;
+		}
+		else if (active.gameObject.tag == "piece-O") {
+			//Debug.Log ("in O >>>>> ");
+			if (rotation == 0 || rotation == 1 || rotation == 2 || rotation == 3) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard ((int)to.x + 1, (int)to.y) || IsOccupied ((int)to.x + 1, (int)to.y, active)) {
+					return false;
+				} else if (!IsWithinBoard ((int)to.x + 1, (int)to.y - 1) || IsOccupied ((int)to.x + 1, (int)to.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard ((int)to.x, (int)to.y - 1) || IsOccupied ((int)to.x, (int)to.y - 1, active)) {
+					return false;
+				} else {
+					return true;
+				}
+			} else {
+				return true;
+			}
+
+		}
+		else if (active.gameObject.tag == "piece-L") {
+			if (rotation == 0) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x, (int)midposition.y + 1 , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x, (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1 , (int) midposition.y - 1) || IsOccupied ((int)midposition.x + 1, (int)midposition.y - 1, active)) {
+					return false;
+				}
+			} else if (rotation == 1) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y - 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y - 1 , active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 2) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y + 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x , (int)midposition.y + 1, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x , (int)midposition.y - 1 , active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 3) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x + 1, (int)midposition.y + 1 , active)) {
+					return false;
+				}
+
+			}
+			return true;
+		}
+		else if (active.gameObject.tag == "piece-J") {
+			if (rotation == 0) {
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x, (int)midposition.y + 1 , active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x, (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1 , (int) midposition.y - 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y - 1, active)) {
+					return false;
+				}
+			} else if (rotation == 1) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x - 1, (int)midposition.y + 1 , active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 2) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x , (int) midposition.y + 1) || IsOccupied ((int)midposition.x , (int)midposition.y + 1, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x , (int) midposition.y - 1) || IsOccupied ((int)midposition.x, (int)midposition.y - 1 , active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y + 1) || IsOccupied ((int)midposition.x + 1, (int)midposition.y + 1 , active)) {
+					return false;
+				}
+
+			}
+			else if (rotation == 3) {
+				//active.RotateRight ();
+				if (!IsWithinBoard((int) midposition.x , (int) midposition.y) || IsOccupied ((int)midposition.x, (int)midposition.y, active)) {
+					return false;
+				} 
+				else if (!IsWithinBoard((int) midposition.x - 1, (int) midposition.y) || IsOccupied ((int)midposition.x - 1, (int)midposition.y, active)) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y) || IsOccupied ((int)midposition.x + 1 , (int)midposition.y, active )) {
+					return false;
+				} else if (!IsWithinBoard((int) midposition.x + 1, (int) midposition.y - 1) || IsOccupied ((int)midposition.x + 1, (int)midposition.y - 1 , active)) {
+					return false;
+				}
+
+			}
+			return true;
+		}
+		return false;
+
 	}
 
 	public void setClears(int clear)
@@ -151,6 +448,8 @@ public class Board : MonoBehaviour {
 		}
 	}
 
+
+
 	void ShiftRowsDown(int startY)
 	{
 		for (int i = startY; i < m_height; ++i)
@@ -169,7 +468,6 @@ public class Board : MonoBehaviour {
 			{
 				ClearRowFX(m_completedRows,y);
 				m_completedRows++;
-				Debug.Log (" ClearAllRows >> rows cleared "+ m_completedRows);
 			}
 		}
 		yield return new WaitForSeconds(0.3f);
