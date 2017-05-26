@@ -1,0 +1,22 @@
+﻿<Properties StartupItem="Assembly-CSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\AI\Species.cs">
+    <Files>
+      <File FileName="Assets\Scripts\AI\INeural Network.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\AI\Node Gene.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\AI\Fitness Evaluator.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\AI\Agent Neural Network.cs" Line="415" Column="30" />
+      <File FileName="Assets\Scripts\AI\Connection Gene.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\AI\Constants.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\AI\Species.cs" Line="5" Column="17" />
+      <File FileName="Assets\Scripts\AI\Player.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Managers\GameController.cs" Line="546" Column="10" />
+      <File FileName="Assets\Scripts\Core\Board.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\Managers\ScoreManager.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
