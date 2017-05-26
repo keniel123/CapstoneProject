@@ -51,7 +51,7 @@ public class Species {
 					for (int i = 0; i < members.Count; i++) {
 						if (members [i].getPlayerName () == p_name) {
 							//Debug.Log ("yoooouuuu " + members [i].brain);
-							members [i].setPlayerFitness (p_fitness);
+							members [i].addToFitnessAccumulator (p_fitness);
 							
 						}
 					}

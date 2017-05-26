@@ -18,6 +18,8 @@ namespace AssemblyCSharp {
 		//player neural network
 		public AgentNeuralNetwork brain;
 
+		private int alive_interval = 1;
+
 		private string player_name;
 
 		private float p_fitness;
@@ -25,6 +27,8 @@ namespace AssemblyCSharp {
 		private float p_time;
 
 		private int numb_clears;
+
+		private float fitness_accumulator;
 
 		private int p_score;
 
@@ -163,7 +167,36 @@ namespace AssemblyCSharp {
 
 		}
 
+		public void addAlive_interval()
+		{
+			this.alive_interval += 1;
 
+		}
+		public int getAlive_interval()
+		{
+			return this.alive_interval;
+
+		}
+		public void setAliveInterval(int i)
+		{
+			this.alive_interval = i;
+
+		}
+		public void addToFitnessAccumulator(float fit)
+		{
+			this.fitness_accumulator += fit;
+
+		}
+		public void setFitnessAccumulator(float fit_acc)
+		{
+			this.fitness_accumulator = fit_acc;
+
+		}
+		public float getFitnessAccumulator()
+		{
+			return this.fitness_accumulator;
+		}
+			
 	}
 
 }

@@ -45,4 +45,21 @@ public class ConnectionGene
 
 	}
 
+	public override string ToString()
+	{
+		string result;
+
+		// [+] = enabled link , [-] = disabled link
+		if (this.enabled == true)
+		{
+			result = "[+]Innov: " + this.innovationNumber.ToString() + " In: " + this.nodeIn.ToString() + " Out: " + this.nodeOut.ToString() + " Weight: " + this.weight.ToString() + " Enabled: " + this.enabled.ToString();
+		}
+		else
+		{
+			result = "[-]Innov: " + this.innovationNumber.ToString() + " In: " + this.nodeIn.ToString() + " Out: " + this.nodeOut.ToString() + " Weight: " + this.weight.ToString() + " Enabled: " + this.enabled.ToString();
+		}
+
+		return result; 
+	}
+
 }

@@ -310,7 +310,6 @@ namespace AssemblyCSharp {
 
 		private void addConnection()
 		{
-			// TODO: add connections to mutate the network
 			while(true)
 			{
 				int index = generation.Next(0, this.nodeGenes.Count);

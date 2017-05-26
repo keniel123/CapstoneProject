@@ -5,9 +5,21 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System;
 using System.Threading;
+// FILE IMPORTS
+using System.IO;
+using System.Text;
+using System.Linq;
 
 namespace AssemblyCSharp{
 	public class GameController : MonoBehaviour {
+
+		// FILE VARIABLES
+		string path = @"C:/Program Files/Unity/TetrisAgents.txt"; // define path to file
+		string newLine = Environment.NewLine; // define new line character
+		// define best player over all generations
+		float h_all_gens = -1000;
+		Player bestEvolvedPlayer;
+		Player bestGenPlayer;
 
 		public Text generation_count, h_fitness_value, c_fitness_value, species_value, genome_value;
 
@@ -127,7 +139,7 @@ namespace AssemblyCSharp{
 
 		public ParticlePlayer m_gameOverFx;
 
-
+		int tempgeneration = 0;
 
 		// Use this for initialization
 		void Start () 
@@ -265,6 +277,7 @@ namespace AssemblyCSharp{
 			if(m_gameOver){
 				timeStarted = false;
 				player.setBoard (Make2DArray (player.getInputArray(), 22, 10));
+				player.addAlive_interval ();
 				player.setClears (m_scoreManager.getClears());
 				player.setScore (m_scoreManager.getscore());
 				float seconds = timer % 60;
@@ -275,12 +288,13 @@ namespace AssemblyCSharp{
 				var next_network = next_net ();
 
 				if (next_network == null) {
-					
+					this.tempgeneration++;
 					m_gameOver = false;
-					NewGeneration ();
-					findHALValues ();
-					h_fitness_value.text = h_all_species.ToString ();
-				
+
+					if (tempgeneration!=0 && tempgeneration % 3 == 0) {
+						NewGeneration ();
+					}
+					nextplayerReset ();
 					//m_graphManager.UpdateGraph ();
 				} else {
 					Reset ();
@@ -293,16 +307,22 @@ namespace AssemblyCSharp{
 
 			}
 
-
-			player.setInputArray (InputBoardStates (inputArray));
-			PlayerInput (player.getMove());
-			player.updateBrain ();
-			if (generation > 0) {
-				c_fitness_value.text = player.getPlayerFitness ().ToString ();
-
+			// Check for end of set training time
+			if (generation > Constants.GENERATIONS){
+				// Save best NN at the end of training
+				saveBestBrain(bestEvolvedPlayer, h_all_gens);
+				// End game
+				GameOver();
 			}
-
-
+			else{
+				player.setInputArray (InputBoardStates (inputArray));
+				PlayerInput (player.getMove());
+				player.updateBrain ();
+				if (tempgeneration!=0 && tempgeneration % 3 == 0) {
+					c_fitness_value.text = player.getPlayerFitness ().ToString ();
+					h_fitness_value.text = h_all_species.ToString();
+				}
+			}
 
 		}
 
@@ -418,22 +438,39 @@ namespace AssemblyCSharp{
 
 		void findHALValues()
 		{
-			//Debug.Log ("i am in you hal");
+			// Initialize
+			int species_count = 0;
 			float sum = 0;
+			int bestSpecies = 0;
+
 			foreach (Species s in species) {
 				foreach (Player p in s.members) {
-					//Debug.Log ("yaaaas " + p.getPlayerFitness ());
 					sum += p.getPlayerFitness();
 					if (p.getPlayerFitness () > h_all_species) {
-						//Debug.Log ("i am in you if statement");
 						h_all_species = p.getPlayerFitness ();
+
+						// Store best species for this gen
+						bestSpecies = species_count;
+						// Store best player for this gen
+						bestGenPlayer = (Player) p;
+						
+						// Calculate best player over all gens
+						if (h_all_species > h_all_gens)
+						{
+							// Update highest fitness
+							h_all_gens = h_all_species;
+							// Store corresponding player
+							bestEvolvedPlayer = (Player) p;
+						}
 
 					}
 					if (p.getPlayerFitness () < l_all_species) {
 						l_all_species = p.getPlayerFitness ();
 					}
 				}
-
+				
+				// Track number of species
+				species_count++;
 			}
 			a_all_species = sum / Constants.POPULATION;
 			Evo.addTopValue (h_all_species);
@@ -442,10 +479,77 @@ namespace AssemblyCSharp{
 			//Debug.Log ("high " + h_all_species.ToString());
 			//Debug.Log ("low " + l_all_species.ToString());
 
+			// Write to file the best player for this gen
+			saveBestPlayer(generation,bestSpecies,h_all_species,bestGenPlayer.get_score(),bestGenPlayer.getPlayerName());
+
 		}
+
+		// FUNCTION DEFINITIONS - Saving agent game sessions
+		void saveBestPlayer(int gen,int numSpecies,float bestFitness,int score,string playerName)
+		{
+			// Add header text only once to the file
+			if (!File.Exists(path))
+			{
+				// Header data
+				string header = "Tetris Agents Data" + newLine;
+				// Create file to write to
+				File.WriteAllText(path, header);
+			}
+
+			// Generation data
+			string genInfo = "Generation: " + gen.ToString();
+
+			// Best player info
+			string fitness = "Highest Fitness: " + bestFitness.ToString();
+			string gameScore = "End game score: " + score.ToString();
+			string bestPlayer = "Best Player: " + playerName;
+			string species = "Species: " + numSpecies.ToString();
+
+			// Synthesize 
+			string data = newLine + genInfo + newLine + fitness + newLine + bestPlayer + newLine + gameScore + newLine + species + newLine;
+			
+			// Append data to file
+			File.AppendAllText(path, data);
+
+		}
+
+		// Save NN structure of best evolved player
+		void saveBestBrain(Player player, float bestOverallFitness)
+		{
+			string bestp = player.getPlayerName();
+			// Neural Net (only need the neural net of the best evolved player)
+			string nn = "Best Evolved Player's Brain => " + bestp + " with fitness = " + bestOverallFitness.ToString() + " and game score = " + player.get_score().ToString() + " making line clears = " + player.getClears().ToString();
+			// Get Node Genes
+			List<NodeGene> nodeGenes = player.brain.GetNodes();
+			// Get Connection Genes
+			List<ConnectionGene> connectionGenes = player.brain.GetConnections();
+			// Node Genes => ID, Type
+			//string nodes = "<< Node Genes >> => " + string.Join(", ", nodeGenes.Select(n=>n.ToString()).ToArray<string>());
+			// Iterate through list of node genes
+			string nodes = "<< Node Genes >> => ";
+			foreach (NodeGene n in nodeGenes)
+			{
+				// Check node type
+				if (n.type.Equals(NodeType.HIDDEN))
+				{
+					nodes += n.ToString() + " )( "; 
+				}
+			}
+			// Connection Genes => InnovationNum, NodeIn, NodeOut, Weight, Enabled
+			string connections = "<< Connection Genes >> => " + string.Join(" || ", connectionGenes.Select(c=>c.ToString()).ToArray<string>());
+			// Genome
+			string genome = "Genome" + newLine + nodes + newLine + connections;
+
+			// Synthesize 
+			string data = newLine + nn + newLine + genome + newLine;
+			
+			// Append data to file
+			File.AppendAllText(path, data);
+		}
+
 		void ReplaceWorstPlayer()
 		{
-			if(generation > 0)
+			if(tempgeneration!=0 && tempgeneration % 3 == 0)
 			{
 				
 				Player worstPlayer = RemoveWorstPlayer();
@@ -473,6 +577,7 @@ namespace AssemblyCSharp{
 				AgentNeuralNetwork fitterbrain = new AgentNeuralNetwork(bestPlayer,secondbestPlayer);
 				//Debug.Log ("worst player >> child  " + worstPlayer.getPlayerName());
 				worstPlayer.brain = fitterbrain;
+				worstPlayer.setAliveInterval (1);
 				//Debug.Log ("worst player >> child alive int  " + worstPlayer.getAlive_interval());
 				AssignPlayerToSpecies (worstPlayer);
 
@@ -601,17 +706,21 @@ namespace AssemblyCSharp{
 			//Evo.addTopValue (h_fitness);
 			//Evo.addLowValue (low_fitness);
 			this.generation++;
-			Reset ();
 			ReplaceWorstPlayer ();
-			if (generation > 0 && generation % 15 == 0) {
+			if (tempgeneration!=0 && tempgeneration % 15 == 0) {
 				PruneStaleSpecies ();
 			}
+		}
+
+		public void nextplayerReset()
+		{
+			Reset ();
+
 			var net = next_net ();
 			player = (Player)net;
 			timeStarted = true;
-		}
 
-	
+		}
 
 		public Player RemoveWorstPlayer()
 		{
@@ -628,10 +737,25 @@ namespace AssemblyCSharp{
 				foreach (String m in adjustedFitnessMapping.Keys) 
 				{
 
+
+					//Debug.Log ("the fitness value for " + m + " is " + adjustedFitnessMapping [m]);
 					s.addFitness(m,adjustedFitnessMapping[m]);
-					if(adjustedFitnessMapping[m] < minFitness)
+					if(HasBeenAliveLongEnough(s.FindbyPlayerName(m)))
+						{
+							//Debug.Log ("aliiiive long enough >>>>>>>> ");
+							//Debug.Log (m);
+							
+							s.FindbyPlayerName (m).setPlayerFitness (s.FindbyPlayerName (m).getFitnessAccumulator() / 3);
+							
+							//Debug.Log (s.FindbyPlayerName (m).getPlayerFitness ());
+							s.FindbyPlayerName (m).setFitnessAccumulator (0);
+							
+
+						}
+					if(s.FindbyPlayerName(m).getPlayerFitness() < minFitness)
 					{
-						minFitness = adjustedFitnessMapping[m];
+
+						minFitness = s.FindbyPlayerName(m).getPlayerFitness();
 						minPlayer = m;
 						minPlayerSpecies = s;
 
@@ -646,23 +770,34 @@ namespace AssemblyCSharp{
 			//Debug.Log ("name " + minPlayer);
 			//Debug.Log ("count before " + minPlayerSpecies.members.Count);
 			Player m_player = new Player();
-
+			low_fitness = minFitness;
 			if (minPlayer != null) {
+				if (HasBeenAliveLongEnough (m_player = minPlayerSpecies.FindbyPlayerName (minPlayer))) {
+					//Debug.Log ("been alived activated >>>>>> " + minPlayer);
 				
-				m_player = minPlayerSpecies.FindbyPlayerName (minPlayer);
-					
-				minPlayerSpecies.RemovebyPlayerName (minPlayer);
-			}
-					for (int i = 0; i < species.Count; i++) {
-						if (species [i].members.Count == 0) {
-							species.RemoveAt (i);
-						}
+					m_player = minPlayerSpecies.FindbyPlayerName (minPlayer);
+					findHALValues ();
+					//Debug.Log ("been alive player >>>>>  " + m_player); 
+
+					//Debug.Log ("been alive player interval >>>>>  " + m_player.getAlive_interval ()); 
+					//remove player from its specie
+					minPlayerSpecies.RemovebyPlayerName (minPlayer);
+
+					if (minPlayerSpecies.members.Count == 0) {
+						species.Remove (minPlayerSpecies);
 					}
+					//Debug.Log ("count after " + minPlayerSpecies.members.Count);
+
+			
+					//Debug.Log ("m_player " + m_player.getPlayerName ());
 
 					return m_player;
-				
+				}
 			}
-
+			Player timone = new Player();
+			//Debug.Log(" not alive enough   " + timone.getPlayerName());
+			return timone;
+		}
 
 
 		public Species ChooseParentSpecies()
@@ -696,6 +831,17 @@ namespace AssemblyCSharp{
 
 
 
+		bool HasBeenAliveLongEnough(Player p)
+		{
+			if (p.getAlive_interval() >= 3) {
+				return true;
+			} else {
+				return false;
+			}
+
+
+		}
+
 		void PruneStaleSpecies()
 		{
 			List<string> availableNames = new List<string> ();
@@ -708,7 +854,7 @@ namespace AssemblyCSharp{
 			avg = sum / species.Count;
 			for (int i = 0; i < species.Count; i++) {
 				if (species [i].GetAverageFitness () < avg) {
-					species.RemoveAt (i);
+					species.Remove (species [i]);
 				}
 			}
 			foreach (Species sp in species) {
@@ -724,7 +870,7 @@ namespace AssemblyCSharp{
 					player = new Player ();
 					player.brain = new AgentNeuralNetwork (Constants.INPUTS, Constants.OUTPUTS);
 					player.setPlayerName ("Player" + UnityEngine.Random.Range(0,50));
-					player.setPlayerFitness (-9999);
+					player.setPlayerFitness(-9999);
 					if (availableNames.Contains (player.getPlayerName ())) {
 						while (!availableNames.Contains (player.getPlayerName ())) {
 							player.setPlayerName ("Player" + UnityEngine.Random.Range (0, 50));

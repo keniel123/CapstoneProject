@@ -1,6 +1,5 @@
 ﻿using System;
 
- 
 public class Constants
 {
 	public const int INPUTS = (22 * 10) + 1;	// 1 bias node
@@ -8,6 +7,7 @@ public class Constants
 
 	public const int POPULATION = 10;
 	public const int SPECIES_COUNT = 2;
+	public const int GENERATIONS = 252;
 
 	public const int TIME_ALIVE_THRESHOLD = 25;
 
