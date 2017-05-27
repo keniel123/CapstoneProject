@@ -5,18 +5,17 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System;
 using System.Threading;
-<<<<<<< HEAD
+
 // FILE IMPORTS
 using System.IO;
 using System.Text;
 using System.Linq;
-=======
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 
 namespace AssemblyCSharp{
 	public class GameController : MonoBehaviour {
 
-<<<<<<< HEAD
+
 		// FILE VARIABLES
 		string path = @"C:/Program Files/Unity/TetrisAgents.txt"; // define path to file
 		string newLine = Environment.NewLine; // define new line character
@@ -25,8 +24,7 @@ namespace AssemblyCSharp{
 		Player bestEvolvedPlayer;
 		Player bestGenPlayer;
 
-=======
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 		public Text generation_count, h_fitness_value, c_fitness_value, species_value, genome_value;
 
 		public static float timer;
@@ -312,7 +310,7 @@ namespace AssemblyCSharp{
 			}
 
 
-<<<<<<< HEAD
+
 			// Check for end of set training time
 			if (generation > Constants.GENERATIONS){
 				// Save best NN at the end of training
@@ -330,7 +328,7 @@ namespace AssemblyCSharp{
 			}
 
 
-=======
+
 			player.setInputArray (InputBoardStates (inputArray));
 			PlayerInput (player.getMove());
 			player.updateBrain ();
@@ -341,7 +339,7 @@ namespace AssemblyCSharp{
 
 
 
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 		}
 
 
@@ -456,7 +454,7 @@ namespace AssemblyCSharp{
 
 		void findHALValues()
 		{
-<<<<<<< HEAD
+
 			// Initialize
 			int species_count = 0;
 			float sum = 0;
@@ -484,7 +482,7 @@ namespace AssemblyCSharp{
 							bestEvolvedPlayer = (Player) p;
 						}
 
-=======
+
 			//Debug.Log ("i am in you hal");
 			float sum = 0;
 			foreach (Species s in species) {
@@ -495,17 +493,13 @@ namespace AssemblyCSharp{
 						//Debug.Log ("i am in you if statement");
 						h_all_species = p.getPlayerFitness ();
 
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 					}
 					if (p.getPlayerFitness () < l_all_species) {
 						l_all_species = p.getPlayerFitness ();
 					}
 				}
-<<<<<<< HEAD
-				
-=======
 
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
 			}
 			a_all_species = sum / Constants.POPULATION;
 			Evo.addTopValue (h_all_species);
@@ -514,7 +508,7 @@ namespace AssemblyCSharp{
 			//Debug.Log ("high " + h_all_species.ToString());
 			//Debug.Log ("low " + l_all_species.ToString());
 
-<<<<<<< HEAD
+
 			// Write to file the best player for this gen
 			saveBestPlayer(generation,bestSpecies,h_all_species,bestGenPlayer.get_score(),bestGenPlayer.getPlayerName());
 
@@ -583,9 +577,9 @@ namespace AssemblyCSharp{
 			File.AppendAllText(path, data);
 		}
 
-=======
+
 		}
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 		void ReplaceWorstPlayer()
 		{
 			if(generation > 0)
