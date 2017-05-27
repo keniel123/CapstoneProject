@@ -45,6 +45,7 @@ public class ConnectionGene
 
 	}
 
+<<<<<<< HEAD
 	public override string ToString()
 	{
 		string result;
@@ -62,4 +63,6 @@ public class ConnectionGene
 		return result; 
 	}
 
+=======
+>>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
 }
