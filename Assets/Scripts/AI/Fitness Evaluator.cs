@@ -1,10 +1,10 @@
-<<<<<<< HEAD
-﻿//Training Tetris.net V1-1 
+
+//Training Tetris.net V1-1 
 //Start Time >> 10:30 PM
 
 using System.Collections;
-=======
-﻿using System.Collections;
+
+using System.Collections;
 >>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
 using System.Collections.Generic;
 using UnityEngine;
@@ -169,14 +169,13 @@ public class FitnessEvaluator {
 		float score = (float)(s); //End of Game Score (+ve)
 		float numberOfClears = (float)(c); //Number of Rows Cleared (+ve)
 		float time = t; //Length of Game Played >>> t/60.0f (+ve)
-<<<<<<< HEAD
-=======
+
 		//Debug.Log("numberOfClears " + numberOfClears);
 //		Debug.Log("Positive Fitness Evaluator Features!");
 //		Debug.Log("End of Game Score:- " + score);
 //		Debug.Log("Number of Rows Cleared:- " + numberOfClears);
 //		Debug.Log("Length of Game Played:- " + time);
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 
 		float[] sum_bumpiness = findColumnHeights_calcSumBumpiness(board);
 		float columnHeights_sum = sum_bumpiness[0];//Sum of Column Heights (-ve)
@@ -186,11 +185,10 @@ public class FitnessEvaluator {
 		float upper_playabilityLevel = upper_lower[0]; //Playability ABOVE Column Heights (-ve)
 		float lower_playabilityLevel = upper_lower[1]; //Playability BELOW Column Heights (-ve)
 
-<<<<<<< HEAD
 		float result = 0.0f;
 		result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.178315*upper_playabilityLevel - 0.178315*lower_playabilityLevel);
 		return result;
-=======
+
 //		Debug.Log("Negative Fitness Evaluator Features!");
 //		Debug.Log("Summation of Column Heights:- " + columnHeights_sum);
 //		Debug.Log("Summation of Differences in Column Heights:- " + columnHeights_bumpiness);
@@ -209,6 +207,6 @@ public class FitnessEvaluator {
 		//Debug.Log("Result:- " + result);
 
 		return result; //60:40 >>> +ve:-ve
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 	}
 }
