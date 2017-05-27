@@ -8,10 +8,9 @@ public class Constants
 
 	public const int POPULATION = 10;
 	public const int SPECIES_COUNT = 2;
-<<<<<<< HEAD
+
 	public const int GENERATIONS = 252;
-=======
->>>>>>> 708281a44cab52ec2f4339869f1db3b198b1d9ad
+
 
 	public const int TIME_ALIVE_THRESHOLD = 25;
 
