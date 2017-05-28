@@ -834,6 +834,9 @@ namespace AssemblyCSharp{
 				//remove player from its specie
 				minPlayerSpecies.RemovebyPlayerName(minPlayer);
 			}
+			if (minPlayerSpecies.members.Count == 0) {
+				species.Remove (minPlayerSpecies);
+			}
 			//Debug.Log ("count after " + minPlayerSpecies.members.Count);
 			for (int i = 0; i < species.Count; i++) {
 				if (species [i].members.Count == 0) {
