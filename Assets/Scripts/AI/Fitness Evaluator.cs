@@ -183,15 +183,11 @@ public class FitnessEvaluator {
 		//		Debug.Log("Lower Playability Level:- " + lower_playabilityLevel);
 
 		float result = 0.0f;
-		//result = (float)(49.1*numberOfClears + 10.9*score - 23.7*columnHeights - 16.3*bumpiness); //1 Clear Line @15th - 17th Generations
-		//result = (float)(24.7*numberOfClears + 10.9*score + 24.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel); //1 Clear Line @2nd - 4th Generations
+		result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.178315*upper_playabilityLevel - 0.178315*lower_playabilityLevel);
+		return result;
+	}
+}
 
-		//result = (float)(24.7*numberOfClears + 10.9*score + 24.4*time - 11.7*columnHeights_sum - 7.3*columnHeights_bumpiness - 13.5*upper_playabilityLevel - 7.5*lower_playabilityLevel); //Fitness Value Improved Yet No Clears :/
-		result = (float)(31.7*numberOfClears + 10.9*score + 17.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel);
-
-		//result = (float)(31.7*numberOfClears + 10.9*score + 17.4*time - 13.7*columnHeights_sum - 9.3*columnHeights_bumpiness - 10.5*upper_playabilityLevel - 6.5*lower_playabilityLevel);
-		//result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.237753*upper_playabilityLevel - 0.118876*lower_playabilityLevel);
-		//Debug.Log("Result:- " + result);
 
 		return result; //60:40 >>> +ve:-ve
 	}
