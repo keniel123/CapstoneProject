@@ -6,7 +6,7 @@ public class Constants
 	public const int INPUTS = (22 * 10  + 3) + 1;	// 1 bias node
 	public const int OUTPUTS = 3;
 
-	public const int POPULATION = 1;
+	public const int POPULATION = 10;
 	public const int SPECIES_COUNT = 2;
 
 	public const int TIME_ALIVE_THRESHOLD = 25;
