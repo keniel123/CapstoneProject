@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿//Version 2.0 - Play by Play and End of Game Evaluation:)
+//Training --> Start >> 3:00 PM
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -102,7 +105,7 @@ public class FitnessEvaluator {
 						cntUL_sumUL[2] += sum_position / 4.0f; //Upper Summation
 					} //Upper
 					else {
-						//Debug.Log("ERROR >>> Empty and filled space can't be in the same location!");
+						Debug.Log("ERROR >>> Empty and filled space can't be in the same location!");
 					}
 				} //Checks if current cell is empty
 			} //Traverses row wise
@@ -152,7 +155,7 @@ public class FitnessEvaluator {
 			} //Right(2) or Top(1)
 		} //Valid - No Flag
 		else {
-			//Debug.Log("Attempt at Going Out of Bound Failed MF!");
+			Debug.Log("Attempt at Going Out of Bound Failed MF!");
 		}
 
 		return count;
@@ -162,12 +165,7 @@ public class FitnessEvaluator {
 		float score = (float)(s); //End of Game Score (+ve)
 		float numberOfClears = (float)(c); //Number of Rows Cleared (+ve)
 		float time = t; //Length of Game Played >>> t/60.0f (+ve)
-		//Debug.Log("numberOfClears " + numberOfClears);
-		//		Debug.Log("Positive Fitness Evaluator Features!");
-		//		Debug.Log("End of Game Score:- " + score);
-		//		Debug.Log("Number of Rows Cleared:- " + numberOfClears);
-		//		Debug.Log("Length of Game Played:- " + time);
-
+		
 		float[] sum_bumpiness = findColumnHeights_calcSumBumpiness(board);
 		float columnHeights_sum = sum_bumpiness[0];//Sum of Column Heights (-ve)
 		float columnHeights_bumpiness = sum_bumpiness[1]; //Variations in Column Heights (-ve)
@@ -176,19 +174,8 @@ public class FitnessEvaluator {
 		float upper_playabilityLevel = upper_lower[0]; //Playability ABOVE Column Heights (-ve)
 		float lower_playabilityLevel = upper_lower[1]; //Playability BELOW Column Heights (-ve)
 
-		//		Debug.Log("Negative Fitness Evaluator Features!");
-		//		Debug.Log("Summation of Column Heights:- " + columnHeights_sum);
-		//		Debug.Log("Summation of Differences in Column Heights:- " + columnHeights_bumpiness);
-		//		Debug.Log("Upper Playability Level:- " + upper_playabilityLevel);
-		//		Debug.Log("Lower Playability Level:- " + lower_playabilityLevel);
-
 		float result = 0.0f;
 		result = (float)(0.760666*numberOfClears + 1.0*score + 1.0*time - 0.510066*columnHeights_sum - 0.184483*columnHeights_bumpiness - 0.178315*upper_playabilityLevel - 0.178315*lower_playabilityLevel);
 		return result;
-	}
-}
-
-
-		return result; //60:40 >>> +ve:-ve
 	}
 }
