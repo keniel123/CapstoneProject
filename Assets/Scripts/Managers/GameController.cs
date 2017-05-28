@@ -167,7 +167,6 @@ namespace AssemblyCSharp{
 
 		Cell dest_cell;
 
-		Pathfinder pf; 
 		// Use this for initialization
 		void Start () 
 		{
