@@ -62,5 +62,4 @@ public class ConnectionGene
 		return result; 
 	}
 
-
 }

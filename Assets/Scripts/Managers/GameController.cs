@@ -5,16 +5,13 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System;
 using System.Threading;
-
 // FILE IMPORTS
 using System.IO;
 using System.Text;
 using System.Linq;
 
-
 namespace AssemblyCSharp{
 	public class GameController : MonoBehaviour {
-
 
 		// FILE VARIABLES
 		string path = @"C:/Program Files/Unity/TetrisAgents.txt"; // define path to file
@@ -23,7 +20,6 @@ namespace AssemblyCSharp{
 		float h_all_gens = -1000;
 		Player bestEvolvedPlayer;
 		Player bestGenPlayer;
-
 
 		public Text generation_count, h_fitness_value, c_fitness_value, species_value, genome_value;
 
@@ -310,7 +306,6 @@ namespace AssemblyCSharp{
 			}
 
 
-
 			// Check for end of set training time
 			if (generation > Constants.GENERATIONS){
 				// Save best NN at the end of training
@@ -326,18 +321,6 @@ namespace AssemblyCSharp{
 					c_fitness_value.text = player.getPlayerFitness ().ToString ();
 				}
 			}
-
-
-
-			player.setInputArray (InputBoardStates (inputArray));
-			PlayerInput (player.getMove());
-			player.updateBrain ();
-			if (generation > 0) {
-				c_fitness_value.text = player.getPlayerFitness ().ToString ();
-
-			}
-
-
 
 
 		}
@@ -454,7 +437,6 @@ namespace AssemblyCSharp{
 
 		void findHALValues()
 		{
-
 			// Initialize
 			int species_count = 0;
 			float sum = 0;
@@ -482,24 +464,12 @@ namespace AssemblyCSharp{
 							bestEvolvedPlayer = (Player) p;
 						}
 
-
-			//Debug.Log ("i am in you hal");
-			float sum = 0;
-			foreach (Species s in species) {
-				foreach (Player p in s.members) {
-					//Debug.Log ("yaaaas " + p.getPlayerFitness ());
-					sum += p.getPlayerFitness();
-					if (p.getPlayerFitness () > h_all_species) {
-						//Debug.Log ("i am in you if statement");
-						h_all_species = p.getPlayerFitness ();
-
-
 					}
 					if (p.getPlayerFitness () < l_all_species) {
 						l_all_species = p.getPlayerFitness ();
 					}
 				}
-
+				
 			}
 			a_all_species = sum / Constants.POPULATION;
 			Evo.addTopValue (h_all_species);
@@ -507,7 +477,6 @@ namespace AssemblyCSharp{
 			Evo.addLowValue (l_all_species);
 			//Debug.Log ("high " + h_all_species.ToString());
 			//Debug.Log ("low " + l_all_species.ToString());
-
 
 			// Write to file the best player for this gen
 			saveBestPlayer(generation,bestSpecies,h_all_species,bestGenPlayer.get_score(),bestGenPlayer.getPlayerName());
@@ -575,9 +544,6 @@ namespace AssemblyCSharp{
 			
 			// Append data to file
 			File.AppendAllText(path, data);
-		}
-
-
 		}
 
 		void ReplaceWorstPlayer()
