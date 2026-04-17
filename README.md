@@ -1,25 +1,65 @@
-# CapstoneProject
+# CapstoneProject — NEAT Tetris Agents (Unity / C#)
 
-# Synopsis
+This project contains multiple AI agents built to play **Tetris** in **Unity (C#)**.
+The agents use **NEAT (NeuroEvolution of Augmenting Topologies)**: a neural network evolved via a genetic algorithm.
 
-These are 3 different verisons of an AI agent created for the purpose of playing Tetris. It makes use of NEAT, a nueral network that is constantly being evolved by a genetic algorithm. The Tetris game was built using Unity gae engine and C#. And the nneural network, genetic algorithm and other components relating to and including the agent were also built using C#.
+## What’s in this repo
 
-# ANGELINA
+There are **3 versions** of the agent (implemented on separate branches):
 
-This version of the agent(found in the branch Version-2) evalutates the game play by play rather than only evaluating the state of the game at the end. The process of doing this is that When a new piece is given to te agent to play it will evaluate each possible move it has, find the one that will give the best state of the boards, and then performs an A* search to determine the best route for the piece to reach that position.
+### ANGELINA (branch: `Version-2`)
+- Evaluates gameplay **move-by-move** (not only at the end of the game)
+- For each new piece, evaluates candidate placements to choose a target board state
+- Uses **A\*** search to route the piece to the chosen placement
 
-# BRAD V1
+### BRAD V1 (branch: `Version-1.1`)
+- Evaluates the gameboard **after the game ends**
+- Each agent plays **one** full game and is scored by that performance
 
-This version of the agent(found in the branch Version-1.1) evalutates the gameboard after the game has ended, in this version each agent only has one chance to play the game and is evaluted based on that performance.
+### BRAD V2 (branch: `Version-1.2`)
+- Evaluates the gameboard **after the game ends**
+- Each agent plays **three** games and is scored by the **average** performance
 
-# BRAD V2
+> The `master` branch contains the project baseline; the main agent implementations live in the branches above.
 
-This version of the agent(found in the branch Version-1.2) evalutates the gameboard after the game has ended, in this version each agent is given 3 chances to play the game and is evaluted based on their average performances.
+## Tech stack
 
-# Collaborators
+- Unity (Tetris environment)
+- C# (NEAT implementation + genetic algorithm + agent logic)
 
-Keniel Peart, Kimberly Soares, Rajay Bitter, Shanice Bryan
+## How to run
 
-# Installation
+1. Install **Unity** (use any version that can open the project in the selected branch).
+2. Clone the repo:
 
-For the installation and use of any version of the agent, Unity game engine must be use to open the project folder
+```bash
+git clone https://github.com/keniel123/CapstoneProject.git
+cd CapstoneProject
+```
+
+3. Check out the version you want:
+
+```bash
+# Angelina
+git checkout Version-2
+
+# Brad V1
+git checkout Version-1.1
+
+# Brad V2
+git checkout Version-1.2
+```
+
+4. Open the project folder in **Unity**.
+5. Press **Play** to run the environment (exact scene / entrypoint depends on the selected branch).
+
+## Collaborators
+
+- Keniel Peart
+- Kimberly Soares
+- Rajay Bitter
+- Shanice Bryan
+
+## License
+
+See [LICENSE](LICENSE).
